@@ -89,6 +89,10 @@ h2{font-weight:500;font-size:24px;margin:0 0 6px}
 .explain h3{font-weight:500;font-size:20px;margin:0 0 6px}
 .explain p{margin:0;font-size:16.5px}
 .explain .swatch{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:1px}
+a{color:var(--blue);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+a:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:2px}
+.note-link{display:inline-block;margin-top:16px;font-family:var(--sans);font-size:15px;font-weight:500}
 footer{margin-top:48px;font-family:var(--sans);font-size:13px;color:var(--ink-soft);border-top:1px solid var(--rule);padding-top:14px}
 </style>
 </head>
@@ -98,6 +102,7 @@ footer{margin-top:48px;font-family:var(--sans);font-size:13px;color:var(--ink-so
   <h1>Same potential at the center, <span class="ring-word">different fields</span> everywhere else</h1>
   <p class="byline">An interactive companion by Claude Opus 5.5</p>
   <p>A point charge at distance <i>R</i>, a ring of radius <i>R</i>, and a spherical shell of radius <i>R</i>, each carrying charge <i>q</i>, all give the potential <i>k<sub>e</sub>q/R</i> at one special point. Drag the probe to see how differently their potentials and fields behave away from it, and release a test charge to test the stability of the center.</p>
+  <a class="note-link" href="https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/charged_ring.pdf" target="_blank" rel="noopener">Read the full note with derivations (PDF)</a>
 </header>
 
 <section class="stage">
@@ -214,7 +219,7 @@ footer{margin-top:48px;font-family:var(--sans);font-size:13px;color:var(--ink-so
   </div>
 </section>
 
-<footer>Made by Claude Opus 5.5. The ring's potential and field are computed from complete elliptic integrals; test-charge motion uses a fourth-order Runge–Kutta integrator.</footer>
+<footer>Made by Claude Opus 5.5. The ring's potential and field are computed from complete elliptic integrals; test-charge motion uses a fourth-order Runge–Kutta integrator. The derivations are in the <a href="https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/charged_ring.pdf" target="_blank" rel="noopener">accompanying note (PDF)</a>.</footer>
 </div>
 <script>
 // Units: R = 1, k_e q = 1.
