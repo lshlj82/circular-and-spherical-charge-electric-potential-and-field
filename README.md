@@ -11,7 +11,7 @@ $$V = \frac{q}{4\pi\varepsilon_0 R}$$
 
 The electric fields are completely different. Why doesn't the equal value of $V$ tell you anything about $\mathbf{E}$? And what do the potential and field of the ring actually look like away from the center?
 
-**[Open the interactive demo](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/)**. 
+**[Open the interactive demo](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/)**
 
 ## Origin
 
