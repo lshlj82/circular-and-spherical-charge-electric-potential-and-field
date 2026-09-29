@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Same potential, different fields: ring, shell and point charge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#ffffff; --panel:#f6f6f8; --ink:#1d1d22; --ink-soft:#5b5b66; --rule:#dcdce3;
+  --pink:#d65fc7; --blue:#2f63d0; --red:#c63a32;
+  --heat-lo:#2f63d0; --heat-hi:#d65fc7;
+  --serif:"Newsreader", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans:"Figtree", "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#17181d; --panel:#1f2027; --ink:#ececf1; --ink-soft:#a3a3b0; --rule:#34353f;
+    --pink:#e88ddb; --blue:#86a6f2; --red:#f08079;
+    --heat-lo:#5f86e6; --heat-hi:#dd72cf;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#17181d; --panel:#1f2027; --ink:#ececf1; --ink-soft:#a3a3b0; --rule:#34353f;
+  --pink:#e88ddb; --blue:#86a6f2; --red:#f08079;
+  --heat-lo:#5f86e6; --heat-hi:#dd72cf;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:18px;line-height:1.55}
+.wrap{max-width:1140px;margin:0 auto;padding:40px 24px 64px}
+header{max-width:760px;margin-bottom:28px}
+h1{font-weight:500;font-size:clamp(30px,4.6vw,46px);line-height:1.08;margin:0 0 14px;letter-spacing:-0.01em}
+h1 .ring-word{background:linear-gradient(transparent 58%, color-mix(in srgb, var(--pink) 38%, transparent) 58%);}
+.byline{font-family:var(--sans);font-size:14px;color:var(--ink-soft);margin:0 0 18px}
+header p{margin:0;max-width:68ch}
+h2{font-weight:500;font-size:24px;margin:0 0 6px}
+.lede{color:var(--ink-soft);margin:0 0 16px;max-width:68ch;font-size:17px}
+.stage{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr);gap:28px;align-items:start}
+@media (max-width:860px){.stage{grid-template-columns:1fr}}
+.canvas-box{position:relative;width:100%;aspect-ratio:1/1;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--paper);touch-action:none}
+.canvas-box canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.canvas-box canvas:focus-visible{outline:3px solid var(--blue);outline-offset:-3px}
+.legend{display:flex;justify-content:space-between;font-family:var(--sans);font-size:13px;color:var(--ink-soft);margin-top:8px;gap:12px;flex-wrap:wrap}
+.scale{display:flex;align-items:center;gap:8px}
+.scale-bar{width:140px;height:9px;border-radius:5px;background:linear-gradient(90deg,var(--heat-lo),var(--paper),var(--heat-hi));border:1px solid var(--rule)}
+.side{font-family:var(--sans);font-size:15px;line-height:1.45}
+.group{margin-bottom:22px}
+.group-title{font-family:var(--serif);font-size:19px;font-weight:500;margin:0 0 8px}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--rule);border-radius:8px;overflow:hidden;width:fit-content;max-width:100%}
+.seg button{font:inherit;font-size:14px;background:transparent;color:var(--ink);border:0;border-right:1px solid var(--rule);padding:8px 13px;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button:focus-visible,.btn:focus-visible,.check input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.check{display:flex;align-items:center;gap:7px;cursor:pointer;margin-right:14px}
+.check input{accent-color:var(--ink);width:16px;height:16px}
+.readout{background:var(--panel);border-radius:8px;padding:12px 14px;font-variant-numeric:tabular-nums}
+.readout dl{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin:0}
+.readout dt{color:var(--ink-soft)}
+.readout dd{margin:0;text-align:right}
+.note{color:var(--ink-soft);font-size:14px;margin:8px 0 0}
+.btn{font:inherit;font-size:14px;font-weight:500;border:1px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.status{margin-top:10px;min-height:3em;font-size:14.5px}
+.coords{display:grid;gap:6px;margin-bottom:10px}
+.coord{display:grid;grid-template-columns:18px 1fr 74px;align-items:center;gap:10px}
+.coord span{font-family:var(--serif);font-style:italic;font-size:17px}
+.coord input[type=range]{width:100%;accent-color:var(--ink)}
+.coord input[type=number]{font:inherit;font-size:14px;width:100%;padding:4px 6px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink);font-variant-numeric:tabular-nums}
+.coord input:disabled{opacity:.4}
+.coord input:focus-visible{outline:3px solid var(--blue);outline-offset:1px}
+#simReadout{margin-top:10px}
+.status strong{font-weight:600}
+.profiles{margin-top:48px}
+.plots{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media (max-width:760px){.plots{grid-template-columns:1fr}}
+.plot{border:1px solid var(--rule);border-radius:6px;background:var(--paper)}
+.plot canvas{display:block;width:100%;height:260px}
+.plot-cap{font-family:var(--sans);font-size:13px;color:var(--ink-soft);margin-top:6px}
+.key{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:13px;color:var(--ink-soft);margin:0 0 10px}
+.key span::before{content:"";display:inline-block;width:18px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--c)}
+.explain{margin-top:48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+@media (max-width:860px){.explain{grid-template-columns:1fr}}
+.explain h3{font-weight:500;font-size:20px;margin:0 0 6px}
+.explain p{margin:0;font-size:16.5px}
+.explain .swatch{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:1px}
+footer{margin-top:48px;font-family:var(--sans);font-size:13px;color:var(--ink-soft);border-top:1px solid var(--rule);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Same potential at the center, <span class="ring-word">different fields</span> everywhere else</h1>
+  <p class="byline">An interactive companion by Claude Opus 5.5</p>
+  <p>A point charge at distance <i>R</i>, a ring of radius <i>R</i>, and a spherical shell of radius <i>R</i>, each carrying charge <i>q</i>, all give the potential <i>k<sub>e</sub>q/R</i> at one special point. Drag the probe to see how differently their potentials and fields behave away from it, and release a test charge to test the stability of the center.</p>
+</header>
+
+<section class="stage">
+  <div>
+    <div class="canvas-box" id="box">
+      <canvas id="map" tabindex="0" aria-label="Potential map. Drag or use arrow keys to move the probe."></canvas>
+    </div>
+    <div class="legend">
+      <div class="scale"><span>lower V</span><span class="scale-bar" aria-hidden="true"></span><span>higher V</span></div>
+      <span>Bold contour: V = k<sub>e</sub>q/R</span>
+    </div>
+  </div>
+
+  <div class="side">
+    <div class="group">
+      <p class="group-title">Charge distribution</p>
+      <div class="seg" id="configSeg" role="group" aria-label="Charge distribution">
+        <button data-v="point" aria-pressed="false">Point charge</button>
+        <button data-v="ring" aria-pressed="true">Ring</button>
+        <button data-v="shell" aria-pressed="false">Spherical shell</button>
+      </div>
+      <div class="row">
+        <div class="seg" id="viewSeg" role="group" aria-label="Slice">
+          <button data-v="3d" aria-pressed="true">3D view</button>
+          <button data-v="side" aria-pressed="false">Side slice (xz)</button>
+          <button data-v="top" aria-pressed="false">Top slice (xy)</button>
+        </div>
+      </div>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="arrows" checked> Field arrows</label>
+        <label class="check"><input type="checkbox" id="contours" checked> Equipotentials</label>
+        <label class="check"><input type="checkbox" id="slices" checked> Slices in 3D</label>
+      </div>
+      <p class="note" id="configNote"></p>
+      <p class="note" id="viewNote"></p>
+    </div>
+
+    <div class="group">
+      <p class="group-title">Probe point</p>
+      <div class="coords" id="coords">
+        <label class="coord"><span>x</span><input type="range" min="-2.4" max="2.4" step="0.01" data-i="0" aria-label="Probe x"><input type="number" min="-2.4" max="2.4" step="0.05" data-i="0" aria-label="Probe x value"></label>
+        <label class="coord"><span>y</span><input type="range" min="-2.4" max="2.4" step="0.01" data-i="1" aria-label="Probe y"><input type="number" min="-2.4" max="2.4" step="0.05" data-i="1" aria-label="Probe y value"></label>
+        <label class="coord"><span>z</span><input type="range" min="-2.4" max="2.4" step="0.01" data-i="2" aria-label="Probe z"><input type="number" min="-2.4" max="2.4" step="0.05" data-i="2" aria-label="Probe z value"></label>
+      </div>
+      <div class="readout">
+        <dl>
+          <dt>Position (x, y, z)</dt><dd id="rPos"></dd>
+          <dt>Distance from center</dt><dd id="rDist"></dd>
+          <dt>Potential V</dt><dd id="rV"></dd>
+          <dt>Field |E|</dt><dd id="rE"></dd>
+          <dt>(E<sub>x</sub>, E<sub>y</sub>, E<sub>z</sub>)</dt><dd id="rEv"></dd>
+        </dl>
+      </div>
+      <p class="note">V in units of k<sub>e</sub>q/R, E in units of k<sub>e</sub>q/R², distances in units of R.</p>
+    </div>
+
+    <div class="group">
+      <p class="group-title">Release a test charge</p>
+      <div class="row" style="margin-top:0">
+        <div class="seg" id="signSeg" role="group" aria-label="Test charge sign">
+          <button data-v="1" aria-pressed="true">Same sign as q</button>
+          <button data-v="-1" aria-pressed="false">Opposite sign</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="seg" id="consSeg" role="group" aria-label="Constraint">
+          <button data-v="free" aria-pressed="true">Free in 3D</button>
+          <button data-v="plane" aria-pressed="false">Confined to plane</button>
+          <button data-v="axis" aria-pressed="false">Confined to axis</button>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="nudge">Nudge from center</button>
+        <button class="btn" id="release">Release at probe point</button>
+        <button class="btn" id="clear">Clear</button>
+      </div>
+      <div class="status" id="status" aria-live="polite">The test charge starts at rest. Its charge-to-mass ratio is ±1 in these units.</div>
+      <div class="readout" id="simReadout" hidden>
+        <dl>
+          <dt>Time t</dt><dd id="sT"></dd>
+          <dt>Position (x, y, z)</dt><dd id="sPos"></dd>
+          <dt>Distance from center</dt><dd id="sDist"></dd>
+          <dt>Speed</dt><dd id="sSpeed"></dd>
+          <dt>Potential V</dt><dd id="sV"></dd>
+          <dt>Field |E|</dt><dd id="sE"></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="profiles">
+  <h2>Profiles from the center</h2>
+  <p class="lede">For the ring, the axis and the plane behave differently. For the point charge and the shell, every direction is the same. The dashed line marks the probe's distance from the center.</p>
+  <div class="key" id="key"></div>
+  <div class="plots">
+    <div><div class="plot"><canvas id="plotV" aria-label="Potential profile"></canvas></div><p class="plot-cap">Potential V versus distance from the center</p></div>
+    <div><div class="plot"><canvas id="plotE" aria-label="Field profile"></canvas></div><p class="plot-cap">Outward field component versus distance from the center</p></div>
+  </div>
+</section>
+
+<section class="explain">
+  <div>
+    <h3><span class="swatch" style="background:var(--ink)"></span>Why the potentials match</h3>
+    <p>Potential is a scalar sum of <i>k<sub>e</sub>dq/s</i>. When every charge element sits at the same distance <i>R</i>, only the total charge matters, so any such arrangement gives <i>k<sub>e</sub>q/R</i>. The field is a gradient, so it depends on how <i>V</i> changes nearby, which one value cannot tell you.</p>
+  </div>
+  <div>
+    <h3><span class="swatch" style="background:var(--pink)"></span>The ring's saddle</h3>
+    <p>Near the ring's center, <i>V</i> ≈ (k<sub>e</sub>q/R)(1 + (x² + y² − 2z²)/4R²). The bold contour crosses itself at the center in the side slice. A test charge is pushed back along one set of directions and away along the other, so without a constraint it always escapes.</p>
+  </div>
+  <div>
+    <h3><span class="swatch" style="background:var(--blue)"></span>The shell's flat interior</h3>
+    <p>Inside the shell <i>V</i> is constant and <i>E</i> is zero everywhere. Patch area grows as <i>s</i>², exactly offsetting the 1/<i>s</i>² field, so opposite patches cancel. A test charge inside feels no force at all: neutral equilibrium.</p>
+  </div>
+</section>
+
+<footer>Made by Claude Opus 5.5. The ring's potential and field are computed from complete elliptic integrals; test-charge motion uses a fourth-order Runge–Kutta integrator.</footer>
+</div>
+<script>
+// Units: R = 1, k_e q = 1.
+function ellipKE(m){
+  // complete elliptic integrals K(m), E(m) with parameter m = k^2, via AGM
+  if (m >= 1) m = 1 - 1e-15;
+  let a = 1, b = Math.sqrt(1 - m), c = Math.sqrt(m);
+  let sum = 0.5 * c * c, pow = 0.5;
+  for (let n = 0; n < 30; n++) {
+    const an = (a + b) / 2, bn = Math.sqrt(a * b), cn = (a - b) / 2;
+    a = an; b = bn; c = cn; pow *= 2;
+    sum += pow * c * c;
+    if (Math.abs(c) < 1e-15) break;
+  }
+  const K = Math.PI / (2 * a);
+  return { K, E: K * (1 - sum) };
+}
+function ringField(x, y, z){
+  const rho = Math.hypot(x, y);
+  const zz = z * z;
+  if (rho < 1e-3) {
+    const q = 1 + zz;
+    const V = 1 / Math.sqrt(q);
+    const Ez = z / Math.pow(q, 1.5);
+    const Erho = -(rho / 2) * (1 - 2 * zz) / Math.pow(q, 2.5);
+    const c = rho > 0 ? x / rho : 0, s = rho > 0 ? y / rho : 0;
+    return { V, Ex: Erho * c, Ey: Erho * s, Ez };
+  }
+  const S = (1 + rho) * (1 + rho) + zz;
+  const D = Math.max((1 - rho) * (1 - rho) + zz, 1e-12);
+  const m = 4 * rho / S;
+  const { K, E } = ellipKE(m);
+  const sq = Math.sqrt(S);
+  const V = (2 / Math.PI) * K / sq;
+  const Ez = (2 / Math.PI) * z * E / (D * sq);
+  const Erho = (1 / (Math.PI * rho * sq)) * (K + (rho * rho - 1 - zz) / D * E);
+  return { V, Ex: Erho * x / rho, Ey: Erho * y / rho, Ez };
+}
+function shellField(x, y, z){
+  const r = Math.hypot(x, y, z);
+  if (r < 1) return { V: 1, Ex: 0, Ey: 0, Ez: 0 };
+  const r3 = r * r * r;
+  return { V: 1 / r, Ex: x / r3, Ey: y / r3, Ez: z / r3 };
+}
+function pointField(x, y, z){
+  const r = Math.max(Math.hypot(x, y, z), 1e-6);
+  const r3 = r * r * r;
+  return { V: 1 / r, Ex: x / r3, Ey: y / r3, Ez: z / r3 };
+}
+
+
+const L = 2.4;               // half-width of the view in units of R
+const HEAT_N = 300;          // heatmap resolution
+const state = {
+  config: 'ring', view: '3d', arrows: true, contours: true,
+  probe: [0.6, 0.4, 0.5], sign: 1, constraint: 'free', sim: null
+};
+const $ = id => document.getElementById(id);
+const map = $('map'), box = $('box');
+const heat = { side: document.createElement('canvas'), top: document.createElement('canvas') };
+heat.side.width = heat.side.height = heat.top.width = heat.top.height = HEAT_N;
+let slices3D = true;
+let colors = {};
+
+function readColors(){
+  const cs = getComputedStyle(document.documentElement);
+  const g = n => cs.getPropertyValue(n).trim();
+  colors = { paper:g('--paper'), ink:g('--ink'), soft:g('--ink-soft'), rule:g('--rule'),
+    pink:g('--pink'), blue:g('--blue'), red:g('--red'), lo:g('--heat-lo'), hi:g('--heat-hi') };
+}
+function hexToRgb(h){
+  h = h.replace('#','');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const n = parseInt(h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function field(x, y, z){
+  if (state.config === 'ring') return ringField(x, y, z);
+  if (state.config === 'shell') return shellField(x, y, z);
+  return pointField(x, y, z);
+}
+// view projection: canvas plane (u, v) <-> 3D
+function to3D(u, v){ return state.view === 'side' ? [u, 0, v] : [u, v, 0]; }
+function to2D(p){ return state.view === 'side' ? [p[0], p[2]] : [p[0], p[1]]; }
+
+function buildHeat(){
+  readColors();
+  buildHeatFor('side'); buildHeatFor('top');
+}
+function buildHeatFor(view){
+  const slice = (u, v) => view === 'side' ? [u, 0, v] : [u, v, 0];
+  const ctx = heat[view].getContext('2d');
+  const img = ctx.createImageData(HEAT_N, HEAT_N);
+  const lv = new Float32Array(HEAT_N * HEAT_N);
+  const step = 0.1; // contour spacing in ln V
+  for (let j = 0; j < HEAT_N; j++){
+    const v = L - (j + 0.5) * 2 * L / HEAT_N;
+    for (let i = 0; i < HEAT_N; i++){
+      const u = -L + (i + 0.5) * 2 * L / HEAT_N;
+      const p = slice(u, v);
+      let V = field(p[0], p[1], p[2]).V;
+      if (!isFinite(V) || V > 60) V = 60;
+      lv[j * HEAT_N + i] = Math.log(V);
+    }
+  }
+  const P = hexToRgb(colors.paper), LO = hexToRgb(colors.lo), HI = hexToRgb(colors.hi), INK = hexToRgb(colors.ink);
+  const span = Math.log(3);
+  for (let k = 0; k < lv.length; k++){
+    let s = Math.max(-1, Math.min(1, lv[k] / span));
+    const T = s >= 0 ? HI : LO, w = Math.pow(Math.abs(s), 0.85) * 0.78;
+    img.data[4*k]   = P[0] + (T[0] - P[0]) * w;
+    img.data[4*k+1] = P[1] + (T[1] - P[1]) * w;
+    img.data[4*k+2] = P[2] + (T[2] - P[2]) * w;
+    img.data[4*k+3] = 255;
+  }
+  if (state.contours){
+    const lvl = k => Math.floor(lv[k] / step + 1e-9);
+    for (let j = 0; j < HEAT_N - 1; j++){
+      for (let i = 0; i < HEAT_N - 1; i++){
+        const k = j * HEAT_N + i, a = lvl(k), b = lvl(k + 1), c = lvl(k + HEAT_N);
+        if (a !== b || a !== c){
+          const main = (Math.min(a, b, c) < 0 && Math.max(a, b, c) >= 0);
+          const lvlDiff = Math.max(Math.abs(a - b), Math.abs(a - c));
+          if (!main && lvlDiff > 1) continue; // skip crowded contours near singularities
+          const w = main ? 0.95 : 0.28;
+          for (let t = 0; t < 3; t++) img.data[4*k+t] = img.data[4*k+t] + (INK[t] - img.data[4*k+t]) * w;
+        }
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+let W = 600, dpr = 1;
+function sizeCanvas(c, w, h){
+  dpr = window.devicePixelRatio || 1;
+  c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+}
+function resizeMap(){
+  W = box.clientWidth;
+  sizeCanvas(map, W, W);
+  drawMap();
+}
+const px = u => (u + L) / (2 * L) * W;
+const py = v => (L - v) / (2 * L) * W;
+const unpx = X => X / W * 2 * L - L;
+const unpy = Y => L - Y / W * 2 * L;
+
+function arrow(ctx, x0, y0, dx, dy, head){
+  const x1 = x0 + dx, y1 = y0 + dy, a = Math.atan2(dy, dx);
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x1, y1);
+  ctx.lineTo(x1 - head * Math.cos(a - 0.45), y1 - head * Math.sin(a - 0.45));
+  ctx.lineTo(x1 - head * Math.cos(a + 0.45), y1 - head * Math.sin(a + 0.45));
+  ctx.closePath(); ctx.fill();
+}
+function nearCharge(u, v, tol){
+  const p = to3D(u, v);
+  if (state.config === 'point') return Math.hypot(...p) < tol * 1.6;
+  if (state.config === 'shell') return Math.abs(Math.hypot(...p) - 1) < tol * 0.6;
+  const rho = Math.hypot(p[0], p[1]);
+  return Math.hypot(rho - 1, p[2]) < tol;
+}
+function drawMap(){
+  if (state.view === '3d') return draw3D();
+  const ctx = map.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.clearRect(0, 0, W, W);
+  ctx.drawImage(heat[state.view], 0, 0, W, W);
+
+  // axes
+  ctx.strokeStyle = colors.rule; ctx.lineWidth = 1; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(0, py(0)); ctx.lineTo(W, py(0)); ctx.moveTo(px(0), 0); ctx.lineTo(px(0), W); ctx.stroke();
+  ctx.fillStyle = colors.soft; ctx.font = '13px Figtree, system-ui, sans-serif';
+  ctx.fillText('x', W - 16, py(0) - 7);
+  ctx.fillText(state.view === 'side' ? 'z' : 'y', px(0) + 7, 16);
+
+  // field arrows
+  if (state.arrows){
+    const n = W < 520 ? 11 : 17, cell = W / n;
+    ctx.strokeStyle = colors.ink; ctx.fillStyle = colors.ink; ctx.globalAlpha = 0.5; ctx.lineWidth = 1.1;
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
+      const X = (i + 0.5) * cell, Y = (j + 0.5) * cell;
+      const u = unpx(X), v = unpy(Y);
+      if (nearCharge(u, v, 0.14)) continue;
+      const p = to3D(u, v), f = field(...p);
+      const e2 = to2D([f.Ex, f.Ey, f.Ez]);
+      const mag = Math.hypot(e2[0], e2[1]);
+      if (mag < 1e-5) continue;
+      const len = cell * 0.46 * Math.min(1, Math.pow(mag / 0.6, 0.35));
+      const dx = e2[0] / mag * len, dy = -e2[1] / mag * len;
+      arrow(ctx, X - dx / 2, Y - dy / 2, dx, dy, Math.max(3, len * 0.32));
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // the charge distribution
+  ctx.lineWidth = 7; ctx.strokeStyle = colors.pink; ctx.fillStyle = colors.pink;
+  const r1 = W / (2 * L);
+  if (state.config === 'point'){
+    ctx.setLineDash([5, 6]); ctx.lineWidth = 1.4; ctx.strokeStyle = colors.ink;
+    ctx.beginPath(); ctx.arc(px(0), py(0), r1, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(px(0), py(0), 8, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = colors.ink; ctx.strokeStyle = colors.paper; ctx.lineWidth = 4; ctx.lineJoin = 'round';
+    ctx.strokeText('distance R', px(0) + r1 * 0.72 + 6, py(0) - r1 * 0.72); ctx.fillText('distance R', px(0) + r1 * 0.72 + 6, py(0) - r1 * 0.72);
+  } else if (state.config === 'ring' && state.view === 'side'){
+    for (const s of [-1, 1]){ ctx.beginPath(); ctx.arc(px(s), py(0), 7, 0, 2 * Math.PI); ctx.fill(); }
+    ctx.fillStyle = colors.ink; ctx.strokeStyle = colors.paper; ctx.lineWidth = 4; ctx.lineJoin = 'round';
+    ctx.strokeText('ring cross-section', px(1) - 58, py(0) + 28); ctx.fillText('ring cross-section', px(1) - 58, py(0) + 28);
+  } else {
+    ctx.beginPath(); ctx.arc(px(0), py(0), r1, 0, 2 * Math.PI); ctx.globalAlpha = 0.85; ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.lineWidth = 1.5; ctx.strokeStyle = colors.ink;
+    ctx.beginPath(); ctx.arc(px(0), py(0), r1, 0, 2 * Math.PI); ctx.stroke();
+  }
+  // center marker
+  ctx.fillStyle = colors.ink; ctx.beginPath(); ctx.arc(px(0), py(0), 2.5, 0, 2 * Math.PI); ctx.fill();
+
+  // test charge trail
+  const sim = state.sim;
+  if (sim){
+    ctx.strokeStyle = sim.sign > 0 ? colors.red : colors.blue; ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.beginPath();
+    sim.trail.forEach((p, k) => { const q = to2D(p); k ? ctx.lineTo(px(q[0]), py(q[1])) : ctx.moveTo(px(q[0]), py(q[1])); });
+    ctx.stroke();
+    const q = to2D(sim.p);
+    ctx.fillStyle = sim.sign > 0 ? colors.red : colors.blue;
+    ctx.beginPath(); ctx.arc(px(q[0]), py(q[1]), 7, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = colors.paper; ctx.font = '600 13px Figtree, system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(sim.sign > 0 ? '+' : '−', px(q[0]), py(q[1]) + 0.5);
+    ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic'; ctx.font = '13px Figtree, system-ui, sans-serif';
+  }
+
+  // probe
+  const pp = to2D(state.probe), f = field(...state.probe);
+  const e2 = to2D([f.Ex, f.Ey, f.Ez]), mag = Math.hypot(e2[0], e2[1]);
+  const X = px(pp[0]), Y = py(pp[1]);
+  if (mag > 1e-6){
+    const len = 70 * Math.min(1.3, Math.pow(mag / 0.5, 0.4));
+    ctx.strokeStyle = colors.ink; ctx.fillStyle = colors.ink; ctx.lineWidth = 2.2;
+    arrow(ctx, X, Y, e2[0] / mag * len, -e2[1] / mag * len, 10);
+  }
+  ctx.fillStyle = colors.paper; ctx.strokeStyle = colors.ink; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.arc(X, Y, 8, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+}
+
+// ---------- 3D oblique view ----------
+const cam = { az: 0.62, el: 0.42 };
+function proj(p){
+  const ca = Math.cos(cam.az), sa = Math.sin(cam.az), ce = Math.cos(cam.el), se = Math.sin(cam.el);
+  const x1 = p[0] * ca - p[1] * sa, y1 = p[0] * sa + p[1] * ca;
+  const sc = W / 6.4;
+  return { X: W / 2 + sc * x1, Y: W / 2 - sc * (y1 * se + p[2] * ce), d: -y1 * ce + p[2] * se };
+}
+function drawTexturedPlane(ctx, img, corner00, corner10, corner01, alpha){
+  const N = HEAT_N;
+  const a = proj(corner00), b = proj(corner10), c = proj(corner01);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.setTransform(dpr * (b.X - a.X) / N, dpr * (b.Y - a.Y) / N, dpr * (c.X - a.X) / N, dpr * (c.Y - a.Y) / N, dpr * a.X, dpr * a.Y);
+  ctx.drawImage(img, 0, 0);
+  ctx.restore();
+  // outline
+  const d = proj([corner10[0] + corner01[0] - corner00[0], corner10[1] + corner01[1] - corner00[1], corner10[2] + corner01[2] - corner00[2]]);
+  ctx.strokeStyle = colors.rule; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(a.X, a.Y); ctx.lineTo(b.X, b.Y); ctx.lineTo(d.X, d.Y); ctx.lineTo(c.X, c.Y); ctx.closePath(); ctx.stroke();
+}
+function ringPath(ctx, front){
+  let pen = false;
+  ctx.beginPath();
+  for (let k = 0; k <= 180; k++){
+    const t = 2 * Math.PI * k / 180, p = proj([Math.cos(t), Math.sin(t), 0]);
+    if ((p.d >= 0) === front){ pen ? ctx.lineTo(p.X, p.Y) : ctx.moveTo(p.X, p.Y); pen = true; }
+    else pen = false;
+  }
+  ctx.stroke();
+}
+function circlePath(ctx, basis, front, dashedBack){
+  // great circle of radius 1 spanned by two unit vectors
+  let pen = false;
+  ctx.beginPath();
+  for (let k = 0; k <= 180; k++){
+    const t = 2 * Math.PI * k / 180;
+    const p = proj([0,1,2].map(i => Math.cos(t) * basis[0][i] + Math.sin(t) * basis[1][i]));
+    if ((p.d >= 0) === front){ pen ? ctx.lineTo(p.X, p.Y) : ctx.moveTo(p.X, p.Y); pen = true; }
+    else pen = false;
+  }
+  ctx.stroke();
+}
+function near3D(p, tol){
+  const r = Math.hypot(...p);
+  if (state.config === 'point') return r < tol * 1.6;
+  if (state.config === 'shell') return Math.abs(r - 1) < tol * 0.6;
+  return Math.hypot(Math.hypot(p[0], p[1]) - 1, p[2]) < tol;
+}
+function arrow3D(ctx, p, e, len3){
+  const m = Math.hypot(e[0], e[1], e[2]);
+  if (m < 1e-6) return;
+  const q0 = [0,1,2].map(i => p[i] - e[i] / m * len3 / 2);
+  const q1 = [0,1,2].map(i => p[i] + e[i] / m * len3 / 2);
+  const a = proj(q0), b = proj(q1);
+  const dx = b.X - a.X, dy = b.Y - a.Y, sl = Math.hypot(dx, dy);
+  if (sl < 2) return;
+  arrow(ctx, a.X, a.Y, dx, dy, Math.max(2.5, sl * 0.32));
+}
+function draw3D(){
+  const ctx = map.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, W);
+  const Lp = L * 0.92;
+
+  // back parts of the charge distribution
+  const r1 = W / 6.4;
+  if (state.config === 'ring'){
+    ctx.strokeStyle = colors.pink; ctx.lineWidth = 5; ctx.globalAlpha = 0.45; ringPath(ctx, false); ctx.globalAlpha = 1;
+  }
+  if (state.config === 'shell'){
+    const o = proj([0,0,0]);
+    ctx.fillStyle = colors.pink; ctx.globalAlpha = 0.10;
+    ctx.beginPath(); ctx.arc(o.X, o.Y, r1, 0, 2 * Math.PI); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = colors.pink; ctx.lineWidth = 1.2; ctx.setLineDash([4, 5]);
+    circlePath(ctx, [[1,0,0],[0,1,0]], false); ctx.setLineDash([]);
+  }
+
+  // two slices (xz and xy), translucent
+  if (slices3D){
+    drawTexturedPlane(ctx, heat.top,  [-L, L, 0], [L, L, 0], [-L, -L, 0], 0.55);
+    drawTexturedPlane(ctx, heat.side, [-L, 0, L], [L, 0, L], [-L, 0, -L], 0.55);
+  }
+
+  // axes
+  ctx.strokeStyle = colors.ink; ctx.fillStyle = colors.ink; ctx.lineWidth = 1.3; ctx.globalAlpha = 0.8;
+  const labels = [['x',[1,0,0]],['y',[0,1,0]],['z',[0,0,1]]];
+  ctx.font = '14px Figtree, system-ui, sans-serif';
+  for (const [name, u] of labels){
+    const a = proj(u.map(c => -c * Lp)), b = proj(u.map(c => c * Lp));
+    arrow(ctx, a.X, a.Y, b.X - a.X, b.Y - a.Y, 9);
+    const t = proj(u.map(c => c * (Lp + 0.22)));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(name, t.X, t.Y);
+  }
+  ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic'; ctx.globalAlpha = 1;
+
+  // field arrows on the two slices
+  if (state.arrows){
+    const n = W < 520 ? 7 : 9;
+    ctx.strokeStyle = colors.ink; ctx.fillStyle = colors.ink; ctx.lineWidth = 1; ctx.globalAlpha = 0.55;
+    const cell = 2 * L / n;
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
+      const u = -L + (i + 0.5) * cell, v = -L + (j + 0.5) * cell;
+      for (const p of [[u, 0, v], [u, v, 0]]){
+        if (near3D(p, 0.18)) continue;
+        const f = field(...p);
+        const m = Math.hypot(f.Ex, f.Ey, f.Ez);
+        if (m < 1e-5) continue;
+        arrow3D(ctx, p, [f.Ex, f.Ey, f.Ez], cell * 0.5 * Math.min(1, Math.pow(m / 0.6, 0.35)));
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // front parts of the charge distribution
+  const o = proj([0,0,0]);
+  if (state.config === 'ring'){
+    ctx.strokeStyle = colors.pink; ctx.lineWidth = 6; ringPath(ctx, true);
+  } else if (state.config === 'shell'){
+    ctx.strokeStyle = colors.pink; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(o.X, o.Y, r1, 0, 2 * Math.PI); ctx.stroke();
+    ctx.lineWidth = 1.4; circlePath(ctx, [[1,0,0],[0,1,0]], true);
+  } else {
+    ctx.fillStyle = colors.pink; ctx.beginPath(); ctx.arc(o.X, o.Y, 8, 0, 2 * Math.PI); ctx.fill();
+    ctx.strokeStyle = colors.ink; ctx.lineWidth = 1; ctx.setLineDash([4, 5]);
+    ctx.beginPath(); ctx.arc(o.X, o.Y, r1, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.fillStyle = colors.ink; ctx.beginPath(); ctx.arc(o.X, o.Y, 2.5, 0, 2 * Math.PI); ctx.fill();
+
+  // test charge trail, with a faint shadow on the xy-plane for depth
+  const sim = state.sim;
+  if (sim){
+    const col = sim.sign > 0 ? colors.red : colors.blue;
+    ctx.strokeStyle = colors.soft; ctx.globalAlpha = 0.5; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    sim.trail.forEach((p, k) => { const q = proj([p[0], p[1], 0]); k ? ctx.lineTo(q.X, q.Y) : ctx.moveTo(q.X, q.Y); });
+    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    ctx.strokeStyle = col; ctx.lineWidth = 2;
+    ctx.beginPath();
+    sim.trail.forEach((p, k) => { const q = proj(p); k ? ctx.lineTo(q.X, q.Y) : ctx.moveTo(q.X, q.Y); });
+    ctx.stroke();
+    const q = proj(sim.p);
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(q.X, q.Y, 7, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = colors.paper; ctx.font = '600 13px Figtree, system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(sim.sign > 0 ? '+' : '−', q.X, q.Y + 0.5);
+    ctx.textAlign = 'start'; ctx.textBaseline = 'alphabetic';
+  }
+
+  // probe with drop line to the xy-plane
+  const p = state.probe, f = field(...p), pp = proj(p), foot = proj([p[0], p[1], 0]);
+  ctx.strokeStyle = colors.soft; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(pp.X, pp.Y); ctx.lineTo(foot.X, foot.Y); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = colors.ink; ctx.fillStyle = colors.ink; ctx.lineWidth = 2.2;
+  const m = Math.hypot(f.Ex, f.Ey, f.Ez);
+  if (m > 1e-6 && m < 50){
+    const len3 = 0.9 * Math.min(1.3, Math.pow(m / 0.5, 0.4));
+    const tip = proj([0,1,2].map(i => p[i] + [f.Ex, f.Ey, f.Ez][i] / m * len3));
+    arrow(ctx, pp.X, pp.Y, tip.X - pp.X, tip.Y - pp.Y, 10);
+  }
+  ctx.fillStyle = colors.paper; ctx.beginPath(); ctx.arc(pp.X, pp.Y, 7, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+
+  ctx.font = '13px Figtree, system-ui, sans-serif'; ctx.fillStyle = colors.soft;
+  ctx.fillText(W < 520 ? 'Drag to rotate, drag the probe to move it' : 'Drag to rotate. Drag the probe to move it; hold Shift to move it vertically.', 12, W - 12);
+  // coordinate label next to the probe
+  const lab = `(${fmt(p[0],2)}, ${fmt(p[1],2)}, ${fmt(p[2],2)})`;
+  ctx.font = '12px Figtree, system-ui, sans-serif'; ctx.fillStyle = colors.ink;
+  ctx.strokeStyle = colors.paper; ctx.lineWidth = 4; ctx.lineJoin = 'round';
+  ctx.strokeText(lab, pp.X + 12, pp.Y + 18); ctx.fillText(lab, pp.X + 12, pp.Y + 18);
+  ctx.fillStyle = colors.soft; ctx.beginPath(); ctx.arc(foot.X, foot.Y, 2.5, 0, 2 * Math.PI); ctx.fill();
+}
+
+// ---------- readouts ----------
+const fmt = (x, d = 3) => (Math.abs(x) < 5e-4 ? 0 : x).toFixed(d).replace('-', '−');
+function updateReadout(){
+  const p = state.probe, f = field(...p);
+  $('rPos').textContent = `(${fmt(p[0],2)}, ${fmt(p[1],2)}, ${fmt(p[2],2)})`;
+  $('rDist').textContent = fmt(Math.hypot(...p), 3);
+  $('rV').textContent = f.V > 50 ? 'very large' : fmt(f.V);
+  const m = Math.hypot(f.Ex, f.Ey, f.Ez);
+  $('rE').textContent = m > 50 ? 'very large' : fmt(m);
+  $('rEv').textContent = m > 50 ? '—' : `(${fmt(f.Ex,2)}, ${fmt(f.Ey,2)}, ${fmt(f.Ez,2)})`;
+}
+const notes = {
+  point: 'The charge sits at the center. The dashed circle has radius R, and every point on it has V = kₑq/R, the same value as the ring and shell centers.',
+  ring: 'At the center V = kₑq/R, and E = 0 by symmetry. In the side slice the bold contour crosses itself there: the center is a saddle.',
+  shell: 'Inside the shell V = kₑq/R everywhere and E = 0. Outside, the shell is indistinguishable from a point charge at its center.'
+};
+
+// ---------- profiles ----------
+function profileSeries(){
+  const out = [];
+  if (state.config === 'ring'){
+    out.push({ name:'Ring, along axis', color:colors.blue,
+      V: s => 1 / Math.sqrt(1 + s*s), E: s => s / Math.pow(1 + s*s, 1.5) });
+    out.push({ name:'Ring, in plane', color:colors.red,
+      V: s => Math.abs(s - 1) < 0.015 ? NaN : ringField(s, 0, 0).V,
+      E: s => Math.abs(s - 1) < 0.015 ? NaN : ringField(s, 0, 0).Ex });
+  } else if (state.config === 'shell'){
+    out.push({ name:'Shell, any direction', color:colors.ink,
+      V: s => s < 1 ? 1 : 1 / s, E: s => s < 1 ? 0 : (s < 1.004 ? NaN : 1 / (s*s)) });
+  } else {
+    out.push({ name:'Point charge, any direction', color:colors.ink,
+      V: s => s < 0.02 ? NaN : 1 / s, E: s => s < 0.02 ? NaN : 1 / (s*s) });
+  }
+  return out;
+}
+function drawPlot(canvas, key, yMin, yMax, yLabel){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  sizeCanvas(canvas, w, h);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  const m = { l: 46, r: 14, t: 14, b: 34 };
+  const X = s => m.l + s / 3 * (w - m.l - m.r);
+  const Y = v => m.t + (yMax - v) / (yMax - yMin) * (h - m.t - m.b);
+  ctx.font = '12px Figtree, system-ui, sans-serif'; ctx.fillStyle = colors.soft;
+  ctx.strokeStyle = colors.rule; ctx.lineWidth = 1;
+  for (let s = 0; s <= 3; s += 0.5){
+    ctx.beginPath(); ctx.moveTo(X(s), m.t); ctx.lineTo(X(s), h - m.b); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillText(s.toString(), X(s), h - m.b + 16);
+  }
+  const ystep = (yMax - yMin) > 4 ? 1 : 0.5;
+  for (let v = Math.ceil(yMin / ystep) * ystep; v <= yMax + 1e-9; v += ystep){
+    ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(w - m.r, Y(v)); ctx.stroke();
+    ctx.textAlign = 'right'; ctx.fillText(fmt(v, 1).replace('.0',''), m.l - 7, Y(v) + 4);
+  }
+  ctx.strokeStyle = colors.soft;
+  ctx.beginPath(); ctx.moveTo(m.l, Y(Math.max(0, yMin))); ctx.lineTo(w - m.r, Y(Math.max(0, yMin))); ctx.stroke();
+  ctx.textAlign = 'center'; ctx.fillText('distance from center / R', (m.l + w - m.r) / 2, h - 4);
+  ctx.save(); ctx.translate(12, (m.t + h - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(yLabel, 0, 0); ctx.restore();
+
+  ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t, w - m.l - m.r, h - m.t - m.b); ctx.clip();
+  if (state.config !== 'point'){
+    ctx.setLineDash([3, 4]); ctx.strokeStyle = colors.pink; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X(1), m.t); ctx.lineTo(X(1), h - m.b); ctx.stroke(); ctx.setLineDash([]);
+  }
+  for (const s of profileSeries()){
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2.4; ctx.beginPath();
+    let pen = false;
+    for (let k = 0; k <= 600; k++){
+      const x = 3 * k / 600, y = s[key](x);
+      if (!isFinite(y) || Math.abs(y) > 20){ pen = false; continue; }
+      pen ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)); pen = true;
+    }
+    ctx.stroke();
+  }
+  const d = Math.hypot(...state.probe);
+  if (d <= 3){
+    ctx.setLineDash([5, 5]); ctx.strokeStyle = colors.ink; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(X(d), m.t); ctx.lineTo(X(d), h - m.b); ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+function drawPlots(){
+  drawPlot($('plotV'), 'V', 0, 2.2, 'V / (kₑq/R)');
+  drawPlot($('plotE'), 'E', -3, 3, 'E / (kₑq/R²)');
+  $('key').innerHTML = profileSeries().map(s => `<span style="--c:${s.color}">${s.name}</span>`).join('')
+    + (state.config !== 'point' ? `<span style="--c:${colors.pink}">charge at distance R</span>` : '');
+}
+
+// ---------- test-charge simulation ----------
+function accel(p){
+  const f = field(p[0], p[1], p[2]);
+  let a = [state.sim.sign * f.Ex, state.sim.sign * f.Ey, state.sim.sign * f.Ez];
+  if (state.sim.cons === 'plane') a[2] = 0;
+  if (state.sim.cons === 'axis') { a[0] = 0; a[1] = 0; }
+  return a;
+}
+function project(p){
+  p = p.slice();
+  if (state.constraint === 'plane') p[2] = 0;
+  if (state.constraint === 'axis') { p[0] = 0; p[1] = 0; }
+  return p;
+}
+function startSim(p0){
+  const p = project(p0);
+  const tc = state.constraint === 'axis' ? 2 : (Math.abs(p[0]) >= Math.abs(p[1]) ? 0 : 1);
+  state.sim = { p, v:[0,0,0], t:0, trail:[p.slice()], sign:state.sign, cons:state.constraint,
+    p0:p.slice(), tc, lastSign: Math.sign(p[tc]), crossings:[], done:false, config:state.config };
+  $('status').textContent = 'Running…';
+  if (!animating){ animating = true; requestAnimationFrame(loop); }
+}
+function rk4(sim, dt){
+  const add = (a, b, s) => [a[0] + b[0]*s, a[1] + b[1]*s, a[2] + b[2]*s];
+  const p = sim.p, v = sim.v;
+  const a1 = accel(p);
+  const p2 = add(p, v, dt/2), v2 = add(v, a1, dt/2), a2 = accel(p2);
+  const p3 = add(p, v2, dt/2), v3 = add(v, a2, dt/2), a3 = accel(p3);
+  const p4 = add(p, v3, dt),   v4 = add(v, a3, dt),   a4 = accel(p4);
+  sim.p = [0,1,2].map(i => p[i] + dt/6 * (v[i] + 2*v2[i] + 2*v3[i] + v4[i]));
+  sim.v = [0,1,2].map(i => v[i] + dt/6 * (a1[i] + 2*a2[i] + 2*a3[i] + a4[i]));
+  sim.t += dt;
+}
+const TMAX = 60;
+function checkEnd(sim){
+  const p = sim.p, r = Math.hypot(...p);
+  if (r > 2.7) return 'escape';
+  if (sim.config === 'ring' && Math.hypot(Math.hypot(p[0], p[1]) - 1, p[2]) < 0.05) return 'ring';
+  if (sim.config === 'point' && r < 0.05) return 'center';
+  if (sim.config === 'shell' && Math.abs(r - 1) < 0.02) return 'shellhit';
+  if (sim.t >= TMAX) return 'bounded';
+  return null;
+}
+function describeDirection(p){
+  const rho = Math.hypot(p[0], p[1]), z = Math.abs(p[2]);
+  if (z > 2 * rho) return 'along the axis';
+  if (rho > 2 * z) return 'within the plane';
+  return 'off to the side';
+}
+function finish(sim, how){
+  sim.done = true;
+  const t = sim.t.toFixed(1);
+  let msg = '';
+  if (how === 'escape') msg = `<strong>Escaped ${describeDirection(sim.p)}</strong> at t = ${t}. The potential energy decreased in that direction, so the starting point was not a stable equilibrium.`;
+  if (how === 'ring') msg = `<strong>Pulled into the ring</strong> at t = ${t}. For an opposite-sign charge, any in-plane displacement grows toward the nearest part of the wire.`;
+  if (how === 'center') msg = `<strong>Fell onto the point charge</strong> at t = ${t}.`;
+  if (how === 'shellhit') msg = `<strong>Reached the shell</strong> at t = ${t}.`;
+  if (how === 'bounded'){
+    const moved = Math.hypot(...sim.p.map((x, i) => x - sim.p0[i]));
+    if (sim.config === 'shell' && Math.hypot(...sim.p0) < 1 && moved < 1e-6){
+      msg = '<strong>No motion at all.</strong> Inside the shell E = 0, so the charge stays where it was released. This is neutral equilibrium: neither restoring nor expelling.';
+    } else {
+      const c = sim.crossings;
+      let per = '';
+      if (c.length >= 3) per = ` Measured period ≈ ${(2 * (c[c.length-1] - c[0]) / (c.length - 1)).toFixed(2)}.`;
+      let pred = '';
+      if (sim.config === 'ring' && sim.cons === 'plane' && sim.sign > 0) pred = ' Small-oscillation prediction: T = 2π√2 ≈ 8.89.';
+      if (sim.config === 'ring' && sim.cons === 'axis' && sim.sign < 0) pred = ' Small-oscillation prediction: T = 2π ≈ 6.28.';
+      msg = `<strong>Still bounded at t = ${TMAX}.</strong> With the unstable direction removed, the charge oscillates about the center.${per}${pred}`;
+    }
+  }
+  $('status').innerHTML = msg;
+}
+let animating = false;
+function loop(){
+  const sim = state.sim;
+  if (!sim || sim.done){ animating = false; return; }
+  for (let k = 0; k < 60; k++){
+    rk4(sim, 0.004);
+    const s = Math.sign(sim.p[sim.tc]);
+    if (s !== 0 && s !== sim.lastSign){ sim.crossings.push(sim.t); sim.lastSign = s; }
+    if (k % 6 === 0) sim.trail.push(sim.p.slice());
+    const how = checkEnd(sim);
+    if (how){ sim.trail.push(sim.p.slice()); finish(sim, how); break; }
+  }
+  if (sim.trail.length > 5000) sim.trail.splice(0, sim.trail.length - 5000);
+  updateSimReadout();
+  drawMap();
+  requestAnimationFrame(loop);
+}
+function updateSimReadout(){
+  const sim = state.sim, box = $('simReadout');
+  if (!sim){ box.hidden = true; return; }
+  box.hidden = false;
+  const p = sim.p, f = field(...p), m = Math.hypot(f.Ex, f.Ey, f.Ez);
+  $('sT').textContent = sim.t.toFixed(2);
+  $('sPos').textContent = `(${fmt(p[0],2)}, ${fmt(p[1],2)}, ${fmt(p[2],2)})`;
+  $('sDist').textContent = fmt(Math.hypot(...p));
+  $('sSpeed').textContent = fmt(Math.hypot(...sim.v));
+  $('sV').textContent = f.V > 50 ? 'very large' : fmt(f.V);
+  $('sE').textContent = m > 50 ? 'very large' : fmt(m);
+}
+function nudge(){
+  const a = Math.random() * 2 * Math.PI, d = state.constraint === 'free' ? 0.05 : 0.15;
+  let p;
+  if (state.constraint === 'axis') p = [0, 0, d * (Math.random() < 0.5 ? -1 : 1)];
+  else if (state.constraint === 'plane') p = [d * Math.cos(a), d * Math.sin(a), 0];
+  else p = [d * Math.cos(a) * 0.8, d * Math.sin(a) * 0.8, d * 0.6 * (Math.random() < 0.5 ? -1 : 1)];
+  if (state.config === 'point'){
+    // the center coincides with the charge; start at distance R instead
+    p = [Math.cos(a), state.constraint === 'axis' ? 0 : 0, Math.sin(a)];
+    if (state.constraint === 'axis') p = [0, 0, 1];
+    if (state.constraint === 'plane') p = [Math.cos(a), Math.sin(a), 0];
+  }
+  startSim(p);
+}
+
+// ---------- interaction ----------
+function setupSeg(id, keyName, after){
+  const seg = $(id);
+  seg.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    const v = b.dataset.v;
+    state[keyName] = (keyName === 'sign') ? Number(v) : v;
+    after && after();
+  });
+}
+function rebuildAll(){
+  state.sim = null;
+  $('status').textContent = 'The test charge starts at rest. Its charge-to-mass ratio is ±1 in these units.';
+  $('configNote').textContent = notes[state.config];
+  updateSimReadout();
+  buildHeat(); drawMap(); updateReadout(); drawPlots();
+}
+setupSeg('configSeg', 'config', rebuildAll);
+setupSeg('viewSeg', 'view', () => {
+  const p = state.probe;
+  if (state.view === 'side') state.probe = [p[0], 0, p[2]];
+  if (state.view === 'top') state.probe = [p[0], p[1], 0];
+  applyViewUI();
+  drawMap(); updateReadout(); drawPlots();
+});
+function applyViewUI(){
+  map.setAttribute('aria-label', state.view === '3d'
+    ? '3D view. Drag to rotate, drag the probe to move it. Arrow keys rotate.'
+    : 'Potential map. Drag or use arrow keys to move the probe.');
+  $('viewNote').textContent = state.view === '3d'
+    ? 'Drag the probe to move it horizontally, or hold Shift while dragging to move it up and down. Drag anywhere else to rotate. The sliders set an exact point in 3D.'
+    : `This slice has ${state.view === 'side' ? 'y' : 'z'} = 0, so the probe stays in it. Switch to the 3D view to place the probe anywhere.`;
+  syncCoords();
+}
+function syncCoords(){
+  const off = state.view === 'side' ? 1 : state.view === 'top' ? 2 : -1;
+  document.querySelectorAll('#coords input').forEach(inp => {
+    const i = Number(inp.dataset.i);
+    inp.value = state.probe[i].toFixed(2);
+    inp.disabled = (i === off);
+  });
+}
+function setProbe(p){
+  state.probe = p.map(c => Math.max(-L, Math.min(L, c)));
+  syncCoords(); drawMap(); updateReadout(); drawPlots();
+}
+document.querySelectorAll('#coords input').forEach(inp => {
+  inp.addEventListener('input', () => {
+    const v = parseFloat(inp.value); if (!isFinite(v)) return;
+    const p = state.probe.slice(); p[Number(inp.dataset.i)] = v; setProbe(p);
+  });
+});
+setupSeg('signSeg', 'sign');
+setupSeg('consSeg', 'constraint');
+$('arrows').addEventListener('change', e => { state.arrows = e.target.checked; drawMap(); });
+$('contours').addEventListener('change', e => { state.contours = e.target.checked; buildHeat(); drawMap(); });
+$('slices').addEventListener('change', e => { slices3D = e.target.checked; drawMap(); });
+$('nudge').addEventListener('click', nudge);
+$('release').addEventListener('click', () => startSim(state.probe));
+$('clear').addEventListener('click', () => { state.sim = null; $('status').textContent = 'Cleared.'; updateSimReadout(); drawMap(); });
+
+let dragging = false, last = null, dragMode = null;
+function nearProbe3D(e){
+  const r = map.getBoundingClientRect(), pp = proj(state.probe);
+  return Math.hypot(e.clientX - r.left - pp.X, e.clientY - r.top - pp.Y) < 18;
+}
+function setProbeFromEvent(e){
+  const r = map.getBoundingClientRect();
+  const u = Math.max(-L, Math.min(L, unpx(e.clientX - r.left)));
+  const v = Math.max(-L, Math.min(L, unpy(e.clientY - r.top)));
+  setProbe(to3D(u, v));
+}
+map.addEventListener('pointerdown', e => {
+  dragging = true; map.setPointerCapture(e.pointerId); last = [e.clientX, e.clientY];
+  if (state.view !== '3d') { dragMode = 'slice'; setProbeFromEvent(e); }
+  else dragMode = nearProbe3D(e) ? 'probe' : 'rotate';
+  if (dragMode === 'rotate') map.style.cursor = 'grabbing';
+});
+map.addEventListener('pointermove', e => {
+  if (!dragging){
+    if (state.view === '3d') map.style.cursor = nearProbe3D(e) ? 'move' : 'grab';
+    else map.style.cursor = 'crosshair';
+    return;
+  }
+  const dX = e.clientX - last[0], dY = e.clientY - last[1];
+  last = [e.clientX, e.clientY];
+  if (dragMode === 'rotate'){
+    cam.az -= dX * 0.01;
+    cam.el = Math.max(-1.45, Math.min(1.45, cam.el + dY * 0.01));
+    drawMap();
+  } else if (dragMode === 'probe'){
+    const sc = W / 6.4, ca = Math.cos(cam.az), sa = Math.sin(cam.az), ce = Math.cos(cam.el), se = Math.sin(cam.el);
+    const p = state.probe.slice();
+    if (e.shiftKey){
+      if (Math.abs(ce) > 0.1) p[2] -= dY / (sc * ce);
+    } else {
+      const dx1 = dX / sc, dy1 = Math.abs(se) > 0.12 ? -dY / (sc * se) : 0;
+      p[0] += dx1 * ca + dy1 * sa;
+      p[1] += -dx1 * sa + dy1 * ca;
+    }
+    setProbe(p);
+  } else setProbeFromEvent(e);
+});
+map.addEventListener('pointerup', () => { dragging = false; dragMode = null; if (state.view === '3d') map.style.cursor = 'grab'; });
+map.addEventListener('pointercancel', () => { dragging = false; });
+map.addEventListener('keydown', e => {
+  if (state.view === '3d'){
+    const r = { ArrowLeft:[0.08,0], ArrowRight:[-0.08,0], ArrowUp:[0,0.08], ArrowDown:[0,-0.08] }[e.key];
+    if (!r) return;
+    e.preventDefault(); cam.az += r[0]; cam.el = Math.max(-1.45, Math.min(1.45, cam.el + r[1])); drawMap(); return;
+  }
+  const step = e.shiftKey ? 0.2 : 0.05;
+  const q = to2D(state.probe);
+  const d = { ArrowLeft:[-step,0], ArrowRight:[step,0], ArrowUp:[0,step], ArrowDown:[0,-step] }[e.key];
+  if (!d) return;
+  e.preventDefault();
+  setProbe(to3D(q[0] + d[0], q[1] + d[1]));
+});
+
+new ResizeObserver(() => { resizeMap(); drawPlots(); }).observe(box);
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { buildHeat(); drawMap(); drawPlots(); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawMap(); drawPlots(); });
+readColors();
+applyViewUI();
+rebuildAll();
+resizeMap();
+
+</script>
+</body>
+</html>
