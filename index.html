@@ -77,6 +77,27 @@ h2{font-weight:500;font-size:24px;margin:0 0 6px}
 #simReadout{margin-top:10px}
 .status strong{font-weight:600}
 .profiles{margin-top:48px}
+.journey{margin-top:56px;padding-top:36px;border-top:1px solid var(--rule)}
+.journey-grid{display:grid;grid-template-columns:minmax(280px,0.9fr) minmax(0,1.1fr);gap:28px;align-items:start}
+@media (max-width:860px){.journey-grid{grid-template-columns:1fr}}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.preset{font:inherit;text-align:left;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;cursor:pointer;font-family:var(--sans);font-size:14px;line-height:1.35}
+.preset:hover{border-color:var(--ink)}
+.preset:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.preset b{display:block;font-weight:600;margin-bottom:2px}
+.preset .pc{color:var(--ink-soft);font-variant-numeric:tabular-nums;font-size:13px}
+.preset .pe{display:block;margin-top:4px;color:var(--ink-soft);font-size:13px}
+.slider-row{display:grid;grid-template-columns:130px 1fr 56px;gap:10px;align-items:center;font-family:var(--sans);font-size:14px;margin-top:10px}
+.slider-row input{width:100%;accent-color:var(--ink)}
+.slider-row output{text-align:right;font-variant-numeric:tabular-nums}
+.jplots{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:560px){.jplots{grid-template-columns:1fr}}
+.jplot{border:1px solid var(--rule);border-radius:6px;background:var(--paper)}
+.jplot canvas{display:block;width:100%}
+#jTraj{aspect-ratio:1/1}
+#jSeries{height:100%;min-height:220px}
+#jMap{height:230px;cursor:pointer}
+.jmap-wrap{margin-top:24px}
 .plots{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 @media (max-width:760px){.plots{grid-template-columns:1fr}}
 .plot{border:1px solid var(--rule);border-radius:6px;background:var(--paper)}
@@ -194,6 +215,49 @@ footer{margin-top:48px;font-family:var(--sans);font-size:13px;color:var(--ink-so
   </div>
 </section>
 
+<section class="journey" id="journey">
+  <h2>The long journey to the ring</h2>
+  <p class="lede">Release a charge of the opposite sign from rest and ask how long it takes to reach the ring. Exactly on the axis it never arrives. Just off the axis, the answer depends on the release height: near the center the sideways offset grows, but from high enough on the axis the charge spends most of each swing where the sideways force pulls it back, and it stays near the axis indefinitely. Everywhere else it slingshots around the wire, and whether it ever hits depends on how thick the wire is.</p>
+  <div class="journey-grid">
+    <div class="side">
+      <p class="group-title">Try a starting point</p>
+      <div class="presets">
+        <button class="preset" data-p="0.01,0,1.8"><b>Stable axial orbit</b><span class="pc">(0.01, 0, 1.8)</span><span class="pe">Stays near the axis indefinitely.</span></button>
+        <button class="preset" data-p="0.01,0,1.0"><b>Unstable axial orbit</b><span class="pc">(0.01, 0, 1.0)</span><span class="pe">The offset grows, then it slingshots.</span></button>
+        <button class="preset" data-p="1.2,0,0.6"><b>Chaotic slingshot</b><span class="pc">(1.2, 0, 0.6)</span><span class="pe">Loops around the wire. Try tiny changes.</span></button>
+        <button class="preset" data-p="1.6,0,0"><b>Straight in</b><span class="pc">(1.6, 0, 0)</span><span class="pe">In the plane: the shortest route.</span></button>
+      </div>
+      <div class="group" style="margin-bottom:12px">
+        <p class="group-title">Run time</p>
+        <div class="seg" id="tmaxSeg" role="group" aria-label="Run time">
+          <button data-v="60" aria-pressed="true">60</button>
+          <button data-v="300" aria-pressed="false">300</button>
+          <button data-v="1000" aria-pressed="false">1000</button>
+          <button data-v="3000" aria-pressed="false">3000</button>
+        </div>
+      </div>
+      <div class="slider-row"><label for="wire">Wire thickness</label><input type="range" id="wire" min="0.01" max="0.2" step="0.01" value="0.05"><output id="wireOut">0.05</output></div>
+      <div class="slider-row"><label for="speed">Playback speed</label><input type="range" id="speed" min="1" max="30" step="1" value="1"><output id="speedOut">1×</output></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary" id="jStart">Release from probe point</button>
+        <button class="btn" id="jStop">Stop</button>
+      </div>
+      <p class="note">Presets switch to the ring with an opposite-sign charge, free in 3D. The wire thickness is the capture radius around the ring, in units of R.</p>
+      <div class="status" id="jStatus" aria-live="polite"></div>
+    </div>
+    <div>
+      <div class="jplots">
+        <div><div class="jplot"><canvas id="jTraj" aria-label="Trajectory in the plane containing the axis and the starting point"></canvas></div><p class="plot-cap">Path in the plane through the axis and the starting point. Dots: the ring's cross-section, drawn at the wire thickness.</p></div>
+        <div style="display:flex;flex-direction:column"><div class="jplot" style="flex:1"><canvas id="jSeries" aria-label="Distance from axis and height versus time"></canvas></div><p class="plot-cap"><span style="color:var(--red)">■</span> distance from the axis ρ(t) &nbsp; <span style="color:var(--blue)">■</span> height z(t)</p></div>
+      </div>
+      <div class="jmap-wrap">
+        <div class="jplot"><canvas id="jMap" aria-label="Stability of the axial oscillation versus release height. Click to release from that height."></canvas></div>
+        <p class="plot-cap">Stability of the axial oscillation versus release height z₀, from a linear (Floquet) analysis. Inside the shaded band a small sideways offset stays small; outside it the offset grows. Click the chart to release a charge at (0.01, 0, z₀).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="profiles">
   <h2>Profiles from the center</h2>
   <p class="lede">For the ring, the axis and the plane behave differently. For the point charge and the shell, every direction is the same. The dashed line marks the probe's distance from the center.</p>
@@ -275,7 +339,7 @@ const L = 2.4;               // half-width of the view in units of R
 const HEAT_N = 300;          // heatmap resolution
 const state = {
   config: 'ring', view: '3d', arrows: true, contours: true,
-  probe: [0.6, 0.4, 0.5], sign: 1, constraint: 'free', sim: null
+  probe: [0.6, 0.4, 0.5], tmax: 60, wire: 0.05, speed: 1, sign: 1, constraint: 'free', sim: null
 };
 const $ = id => document.getElementById(id);
 const map = $('map'), box = $('box');
@@ -287,7 +351,7 @@ let colors = {};
 function readColors(){
   const cs = getComputedStyle(document.documentElement);
   const g = n => cs.getPropertyValue(n).trim();
-  colors = { paper:g('--paper'), ink:g('--ink'), soft:g('--ink-soft'), rule:g('--rule'),
+  colors = { panel:g('--panel'), paper:g('--paper'), ink:g('--ink'), soft:g('--ink-soft'), rule:g('--rule'),
     pink:g('--pink'), blue:g('--blue'), red:g('--red'), lo:g('--heat-lo'), hi:g('--heat-hi') };
 }
 function hexToRgb(h){
@@ -744,9 +808,12 @@ function project(p){
 function startSim(p0){
   const p = project(p0);
   const tc = state.constraint === 'axis' ? 2 : (Math.abs(p[0]) >= Math.abs(p[1]) ? 0 : 1);
+  const rh = Math.hypot(p[0], p[1]);
+  const basis = rh > 1e-9 ? [p[0] / rh, p[1] / rh] : [1, 0];
   state.sim = { p, v:[0,0,0], t:0, trail:[p.slice()], sign:state.sign, cons:state.constraint,
-    p0:p.slice(), tc, lastSign: Math.sign(p[tc]), crossings:[], done:false, config:state.config };
-  $('status').textContent = 'Running…';
+    p0:p.slice(), tc, lastSign: Math.sign(p[tc]), crossings:[], done:false, config:state.config,
+    basis, jtrail:[[rh, p[2]]], series:[[0, rh, p[2]]], every:25, path:0, tmax:state.tmax, wire:state.wire };
+  setStatus('Running…');
   if (!animating){ animating = true; requestAnimationFrame(loop); }
 }
 function rk4(sim, dt){
@@ -760,14 +827,14 @@ function rk4(sim, dt){
   sim.v = [0,1,2].map(i => v[i] + dt/6 * (a1[i] + 2*a2[i] + 2*a3[i] + a4[i]));
   sim.t += dt;
 }
-const TMAX = 60;
+function setStatus(html){ $('status').innerHTML = html; $('jStatus').innerHTML = html; }
 function checkEnd(sim){
   const p = sim.p, r = Math.hypot(...p);
   if (r > 2.7) return 'escape';
-  if (sim.config === 'ring' && Math.hypot(Math.hypot(p[0], p[1]) - 1, p[2]) < 0.05) return 'ring';
+  if (sim.config === 'ring' && Math.hypot(Math.hypot(p[0], p[1]) - 1, p[2]) < sim.wire) return 'ring';
   if (sim.config === 'point' && r < 0.05) return 'center';
   if (sim.config === 'shell' && Math.abs(r - 1) < 0.02) return 'shellhit';
-  if (sim.t >= TMAX) return 'bounded';
+  if (sim.t >= sim.tmax) return 'bounded';
   return null;
 }
 function describeDirection(p){
@@ -781,7 +848,8 @@ function finish(sim, how){
   const t = sim.t.toFixed(1);
   let msg = '';
   if (how === 'escape') msg = `<strong>Escaped ${describeDirection(sim.p)}</strong> at t = ${t}. The potential energy decreased in that direction, so the starting point was not a stable equilibrium.`;
-  if (how === 'ring') msg = `<strong>Pulled into the ring</strong> at t = ${t}. For an opposite-sign charge, any in-plane displacement grows toward the nearest part of the wire.`;
+  const path = ` It traveled a path of length ${sim.path.toFixed(1)}.`;
+  if (how === 'ring') msg = `<strong>Reached the ring</strong> at t = ${t}.${path}` + (sim.t < 15 ? ' Opposite-sign charges are pulled toward the nearest part of the wire.' : '');
   if (how === 'center') msg = `<strong>Fell onto the point charge</strong> at t = ${t}.`;
   if (how === 'shellhit') msg = `<strong>Reached the shell</strong> at t = ${t}.`;
   if (how === 'bounded'){
@@ -795,17 +863,41 @@ function finish(sim, how){
       let pred = '';
       if (sim.config === 'ring' && sim.cons === 'plane' && sim.sign > 0) pred = ' Small-oscillation prediction: T = 2π√2 ≈ 8.89.';
       if (sim.config === 'ring' && sim.cons === 'axis' && sim.sign < 0) pred = ' Small-oscillation prediction: T = 2π ≈ 6.28.';
-      msg = `<strong>Still bounded at t = ${TMAX}.</strong> With the unstable direction removed, the charge oscillates about the center.${per}${pred}`;
+      if (sim.cons === 'free' && sim.config === 'ring' && sim.sign < 0){
+        const nearAxis = Math.max(...sim.series.map(s => s[1])) < 0.3;
+        msg = `<strong>Never reached the ring</strong> in t = ${sim.tmax}.${path}` + (nearAxis
+          ? ' It stayed close to the axis the whole time: the axial oscillation is stable against sideways offsets from this height.'
+          : ` It never came within the wire thickness (${sim.wire.toFixed(2)}R). Try a thicker wire or a longer run.`);
+      } else if (sim.cons === 'free'){
+        msg = `<strong>Still bounded at t = ${sim.tmax}.</strong>${path}`;
+      } else {
+        msg = `<strong>Still bounded at t = ${sim.tmax}.</strong> With the unstable direction removed, the charge oscillates about the center.${per}${pred}`;
+      }
     }
   }
-  $('status').innerHTML = msg;
+  setStatus(msg);
+  drawJourney();
 }
 let animating = false;
 function loop(){
   const sim = state.sim;
   if (!sim || sim.done){ animating = false; return; }
-  for (let k = 0; k < 60; k++){
+  const nSteps = 60 * state.speed;
+  for (let k = 0; k < nSteps; k++){
+    const prev = sim.p;
     rk4(sim, 0.004);
+    sim.path += Math.hypot(sim.p[0] - prev[0], sim.p[1] - prev[1], sim.p[2] - prev[2]);
+    sim.stepCount = (sim.stepCount || 0) + 1;
+    if (sim.stepCount % sim.every === 0){
+      const u = sim.p[0] * sim.basis[0] + sim.p[1] * sim.basis[1];
+      sim.jtrail.push([u, sim.p[2]]);
+      sim.series.push([sim.t, Math.hypot(sim.p[0], sim.p[1]), sim.p[2]]);
+      if (sim.series.length > 6000){
+        sim.series = sim.series.filter((_, i) => i % 2 === 0);
+        sim.jtrail = sim.jtrail.filter((_, i) => i % 2 === 0);
+        sim.every *= 2;
+      }
+    }
     const s = Math.sign(sim.p[sim.tc]);
     if (s !== 0 && s !== sim.lastSign){ sim.crossings.push(sim.t); sim.lastSign = s; }
     if (k % 6 === 0) sim.trail.push(sim.p.slice());
@@ -815,6 +907,7 @@ function loop(){
   if (sim.trail.length > 5000) sim.trail.splice(0, sim.trail.length - 5000);
   updateSimReadout();
   drawMap();
+  drawJourney();
   requestAnimationFrame(loop);
 }
 function updateSimReadout(){
@@ -857,7 +950,7 @@ function setupSeg(id, keyName, after){
 }
 function rebuildAll(){
   state.sim = null;
-  $('status').textContent = 'The test charge starts at rest. Its charge-to-mass ratio is ±1 in these units.';
+  setStatus('The test charge starts at rest. Its charge-to-mass ratio is ±1 in these units.');
   $('configNote').textContent = notes[state.config];
   updateSimReadout();
   buildHeat(); drawMap(); updateReadout(); drawPlots();
@@ -904,7 +997,7 @@ $('contours').addEventListener('change', e => { state.contours = e.target.checke
 $('slices').addEventListener('change', e => { slices3D = e.target.checked; drawMap(); });
 $('nudge').addEventListener('click', nudge);
 $('release').addEventListener('click', () => startSim(state.probe));
-$('clear').addEventListener('click', () => { state.sim = null; $('status').textContent = 'Cleared.'; updateSimReadout(); drawMap(); });
+$('clear').addEventListener('click', () => { state.sim = null; setStatus('Cleared.'); updateSimReadout(); drawMap(); drawJourney(); });
 
 let dragging = false, last = null, dragMode = null;
 function nearProbe3D(e){
@@ -964,8 +1057,152 @@ map.addEventListener('keydown', e => {
   setProbe(to3D(q[0] + d[0], q[1] + d[1]));
 });
 
+
+// ---------- the long journey ----------
+function setSegValue(id, v){
+  $(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === String(v) ? 'true' : 'false'));
+}
+function prepJourney(){
+  if (state.config !== 'ring'){ state.config = 'ring'; setSegValue('configSeg', 'ring'); rebuildAll(); }
+  state.sign = -1; setSegValue('signSeg', '-1');
+  state.constraint = 'free'; setSegValue('consSeg', 'free');
+  if (state.view === 'top'){ state.view = '3d'; setSegValue('viewSeg', '3d'); applyViewUI(); }
+}
+function journeyFrom(p){
+  prepJourney();
+  setProbe(p);
+  startSim(state.probe);
+}
+document.querySelectorAll('.preset').forEach(b => b.addEventListener('click', () => journeyFrom(b.dataset.p.split(',').map(Number))));
+setupSeg('tmaxSeg', 'tmax', () => { state.tmax = Number(state.tmax); });
+$('wire').addEventListener('input', e => { state.wire = Number(e.target.value); $('wireOut').textContent = state.wire.toFixed(2); drawJourney(); });
+$('speed').addEventListener('input', e => { state.speed = Number(e.target.value); $('speedOut').textContent = state.speed + '×'; });
+$('jStart').addEventListener('click', () => { prepJourney(); startSim(state.probe); });
+$('jStop').addEventListener('click', () => { if (state.sim && !state.sim.done){ state.sim.done = true; setStatus(`Stopped at t = ${state.sim.t.toFixed(1)}. Path length so far: ${state.sim.path.toFixed(1)}.`); } });
+
+function prepCanvas(c){
+  const w = c.clientWidth, h = c.clientHeight;
+  sizeCanvas(c, w, h);
+  const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+  return [ctx, w, h];
+}
+function drawJourney(){
+  const sim = state.sim;
+  // trajectory in the (rho-signed, z) plane
+  {
+    const [ctx, w] = prepCanvas($('jTraj'));
+    const Lj = 2.5, X = u => (u + Lj) / (2 * Lj) * w, Y = v => (Lj - v) / (2 * Lj) * w;
+    ctx.strokeStyle = colors.rule; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, Y(0)); ctx.lineTo(w, Y(0)); ctx.moveTo(X(0), 0); ctx.lineTo(X(0), w); ctx.stroke();
+    ctx.fillStyle = colors.soft; ctx.font = '12px Figtree, system-ui, sans-serif';
+    ctx.fillText('ρ', w - 14, Y(0) - 6); ctx.fillText('z', X(0) + 6, 14);
+    const wr = Math.max(3.5, state.wire / (2 * Lj) * w);
+    for (const s of [-1, 1]){
+      ctx.fillStyle = colors.pink; ctx.beginPath(); ctx.arc(X(s), Y(0), wr, 0, 2 * Math.PI); ctx.fill();
+    }
+    if (sim && sim.config === 'ring'){
+      ctx.strokeStyle = sim.sign > 0 ? colors.red : colors.blue; ctx.lineWidth = 1.2; ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      sim.jtrail.forEach((q, k) => k ? ctx.lineTo(X(q[0]), Y(q[1])) : ctx.moveTo(X(q[0]), Y(q[1])));
+      const u = sim.p[0] * sim.basis[0] + sim.p[1] * sim.basis[1];
+      ctx.lineTo(X(u), Y(sim.p[2])); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.fillStyle = sim.sign > 0 ? colors.red : colors.blue;
+      ctx.beginPath(); ctx.arc(X(u), Y(sim.p[2]), 5, 0, 2 * Math.PI); ctx.fill();
+      ctx.strokeStyle = colors.ink; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(X(sim.jtrail[0][0]), Y(sim.jtrail[0][1]), 5, 0, 2 * Math.PI); ctx.stroke();
+      ctx.fillStyle = colors.ink; ctx.font = '12px Figtree, system-ui, sans-serif';
+      ctx.fillText(`t = ${sim.t.toFixed(1)}   path = ${sim.path.toFixed(1)}`, 8, w - 8);
+    } else {
+      ctx.fillStyle = colors.soft; ctx.font = '13px Figtree, system-ui, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('Pick a starting point to begin', w / 2, w / 2 + 34); ctx.textAlign = 'start';
+    }
+  }
+  // time series
+  {
+    const c = $('jSeries'); const [ctx, w, h] = prepCanvas(c);
+    const m = { l: 34, r: 10, t: 10, b: 26 };
+    const tEnd = sim ? Math.max(10, sim.t) : 60;
+    const X = tt => m.l + tt / tEnd * (w - m.l - m.r), Y = v => m.t + (2.5 - v) / 5 * (h - m.t - m.b);
+    ctx.strokeStyle = colors.rule; ctx.lineWidth = 1; ctx.font = '11px Figtree, system-ui, sans-serif'; ctx.fillStyle = colors.soft;
+    for (const v of [-2, -1, 0, 1, 2]){ ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(w - m.r, Y(v)); ctx.stroke(); ctx.textAlign = 'right'; ctx.fillText(String(v).replace('-', '−'), m.l - 6, Y(v) + 4); }
+    ctx.textAlign = 'center'; ctx.fillText('time t', (m.l + w - m.r) / 2, h - 6);
+    ctx.textAlign = 'left'; ctx.fillText('0', m.l, h - m.b + 13); ctx.textAlign = 'right'; ctx.fillText(tEnd.toFixed(0), w - m.r, h - m.b + 13); ctx.textAlign = 'start';
+    ctx.strokeStyle = colors.pink; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(m.l, Y(1)); ctx.lineTo(w - m.r, Y(1)); ctx.stroke(); ctx.setLineDash([]);
+    if (sim && sim.series.length > 1){
+      for (const [idx, col] of [[2, colors.blue], [1, colors.red]]){
+        ctx.strokeStyle = col; ctx.lineWidth = 1.4; ctx.beginPath();
+        sim.series.forEach((s, k) => k ? ctx.lineTo(X(s[0]), Y(s[idx])) : ctx.moveTo(X(s[0]), Y(s[idx])));
+        ctx.stroke();
+      }
+    }
+  }
+  drawStabilityMap();
+}
+
+// Floquet analysis of the axial oscillation (opposite-sign charge, R = 1, k_e q = 1, |Q|/m = 1)
+let floquet = null;
+function computeFloquet(){
+  const out = [];
+  const der = s => { const z = s[0], q = 1 + z * z, k = 0.5 * (1 - 2 * z * z) / Math.pow(q, 2.5);
+    return [s[1], -z / Math.pow(q, 1.5), s[3], k * s[2], s[5], k * s[4]]; };
+  for (let z0 = 0.05; z0 <= 5.0001; z0 += 0.025){
+    let s = [z0, 0, 1, 0, 0, 1], t = 0; const dt = 0.004; let prevV = 0;
+    for (let n = 0; n < 200000; n++){
+      const k1 = der(s), k2 = der(s.map((x, i) => x + dt / 2 * k1[i])), k3 = der(s.map((x, i) => x + dt / 2 * k2[i])), k4 = der(s.map((x, i) => x + dt * k3[i]));
+      const ns = s.map((x, i) => x + dt / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+      t += dt;
+      if (prevV < 0 && ns[1] >= 0){ s = ns; break; }  // reached z = -z0: half a period
+      prevV = ns[1]; s = ns;
+    }
+    // over the full period the linear map is M_half applied twice with z -> -z symmetry; the coefficient is even in z, so M_full = M_half^2
+    const a = s[2], b = s[4], c = s[3], d = s[5];
+    const tr = a * a + 2 * b * c + d * d;
+    out.push([z0, tr / 2]);
+  }
+  floquet = out;
+}
+let mapHover = null;
+function drawStabilityMap(){
+  const c = $('jMap'); const [ctx, w, h] = prepCanvas(c);
+  const m = { l: 46, r: 12, t: 12, b: 36 }, zMax = 5, yMin = -1.5, yMax = 4;
+  const X = z => m.l + z / zMax * (w - m.l - m.r), Y = v => m.t + (yMax - v) / (yMax - yMin) * (h - m.t - m.b);
+  ctx.fillStyle = colors.blue; ctx.globalAlpha = 0.12; ctx.fillRect(m.l, Y(1), w - m.l - m.r, Y(-1) - Y(1)); ctx.globalAlpha = 1;
+  ctx.fillStyle = colors.panel || colors.rule; ctx.globalAlpha = 0.5; ctx.fillRect(X(L), m.t, X(zMax) - X(L), h - m.t - m.b); ctx.globalAlpha = 1;
+  ctx.strokeStyle = colors.rule; ctx.lineWidth = 1; ctx.font = '11px Figtree, system-ui, sans-serif'; ctx.fillStyle = colors.soft;
+  for (let z = 0; z <= zMax; z++){ ctx.beginPath(); ctx.moveTo(X(z), m.t); ctx.lineTo(X(z), h - m.b); ctx.stroke(); ctx.textAlign = 'center'; ctx.fillText(z, X(z), h - m.b + 14); }
+  for (const v of [-1, 0, 1, 2, 3, 4]){ ctx.textAlign = 'right'; ctx.fillText(String(v).replace('-', '−'), m.l - 6, Y(v) + 4); }
+  ctx.textAlign = 'center'; ctx.fillText('release height z₀ / R', (m.l + w - m.r) / 2, h - 3);
+  ctx.save(); ctx.translate(12, (m.t + h - m.b) / 2); ctx.rotate(-Math.PI / 2); ctx.fillText('½ trace', 0, 0); ctx.restore();
+  ctx.textAlign = 'left'; ctx.fillStyle = colors.blue; ctx.fillText('stable', X(0.1), Y(0.55));
+  ctx.fillStyle = colors.soft; ctx.fillText('beyond the demo’s view', X(L) + 6, m.t + 14); ctx.textAlign = 'start';
+  if (!floquet) return;
+  ctx.save(); ctx.beginPath(); ctx.rect(m.l, m.t, w - m.l - m.r, h - m.t - m.b); ctx.clip();
+  ctx.strokeStyle = colors.ink; ctx.lineWidth = 2; ctx.beginPath();
+  floquet.forEach(([z, v], k) => k ? ctx.lineTo(X(z), Y(v)) : ctx.moveTo(X(z), Y(v))); ctx.stroke();
+  const sim = state.sim;
+  if (sim && sim.config === 'ring' && Math.hypot(sim.p0[0], sim.p0[1]) < 0.05){
+    const z0 = Math.abs(sim.p0[2]);
+    ctx.strokeStyle = sim.sign > 0 ? colors.red : colors.blue; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(X(z0), m.t); ctx.lineTo(X(z0), h - m.b); ctx.stroke(); ctx.setLineDash([]);
+  }
+  if (mapHover !== null && mapHover <= L){
+    ctx.strokeStyle = colors.soft; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(mapHover), m.t); ctx.lineTo(X(mapHover), h - m.b); ctx.stroke();
+    ctx.fillStyle = colors.ink; ctx.fillText(`z₀ = ${mapHover.toFixed(2)}`, Math.min(X(mapHover) + 6, w - 80), h - m.b - 8);
+  }
+  ctx.restore();
+}
+function mapZ(e){
+  const c = $('jMap'), r = c.getBoundingClientRect(), w = c.clientWidth;
+  return (e.clientX - r.left - 46) / (w - 46 - 12) * 5;
+}
+$('jMap').addEventListener('pointermove', e => { const z = mapZ(e); mapHover = (z >= 0 && z <= 5) ? z : null; drawStabilityMap(); });
+$('jMap').addEventListener('pointerleave', () => { mapHover = null; drawStabilityMap(); });
+$('jMap').addEventListener('click', e => { const z = mapZ(e); if (z > 0 && z <= L) journeyFrom([0.01, 0, z]); });
+new ResizeObserver(() => drawJourney()).observe($('journey'));
+setTimeout(() => { computeFloquet(); drawStabilityMap(); }, 50);
+
 new ResizeObserver(() => { resizeMap(); drawPlots(); }).observe(box);
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { buildHeat(); drawMap(); drawPlots(); });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { buildHeat(); drawMap(); drawPlots(); drawJourney(); });
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawMap(); drawPlots(); });
 readColors();
 applyViewUI();
