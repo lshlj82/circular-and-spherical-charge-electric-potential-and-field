@@ -11,9 +11,7 @@ $$V = \frac{q}{4\pi\varepsilon_0 R}$$
 
 The electric fields are completely different. Why doesn't the equal value of $V$ tell you anything about $\mathbf{E}$? And what do the potential and field of the ring actually look like away from the center?
 
-**[Open the interactive demo](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/index.html)** · **[Read the note (PDF)](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/charged_ring.pdf)**
-
-If GitHub Pages is enabled, the demo is served at the repository's Pages URL.
+**[Open the interactive demo](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/index.html)** · **[Read the note (PDF)](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/charged_ring.pdf)** · **[Trick quiz and answer (PDF, English & Korean)](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/trick_quiz.pdf)**
 
 ## Motivation
 
@@ -34,6 +32,8 @@ The note works through the mathematics, and the demo lets you see and test each 
 | `index.html` | Self-contained interactive demo. Open it in any modern browser; no build step or server is needed. |
 | `charged_ring.tex` | LaTeX source of the note, with TikZ/pgfplots figures. |
 | `charged_ring.pdf` | Compiled version of the note ([view online](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/charged_ring.pdf)). |
+| `trick_quiz.tex` | LaTeX source of the trick quiz and its answer, in English and Korean. |
+| `trick_quiz.pdf` | Compiled version of the trick quiz ([view online](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/trick_quiz.pdf)). |
 
 ## The physics in brief
 
@@ -57,6 +57,19 @@ $V$ rises in the plane of the ring and falls along its axis. A test charge at th
 
 **The spherical shell for comparison.** A shell of the same charge and radius gives the same central potential. For the shell, though, $V$ is constant throughout the interior and $\mathbf{E} = 0$ everywhere inside, not just at the center. Newton's cone argument explains why: patch area grows like $s^2$, which exactly offsets the $1/s^2$ fall-off of the field. A one-dimensional ring can't provide that compensation.
 
+## Bonus: a trick quiz
+
+Sang Hoon Lee posed a follow-up trap for students. Both potentials have the form $q/4\pi\varepsilon_0 r$. Differentiating either with respect to $r$ gives the same form, so shouldn't the electric fields be the same too?
+
+The answer is no, because $r$ means different things in the two formulas:
+
+- **For the point charge,** $r$ locates the observation point, so $-dV/dr$ is the field.
+- **For the ring,** $r$ is the ring's radius, a parameter of the source. Differentiating with respect to it asks what happens if the ring is bigger, not what happens if the observer moves.
+
+The field must be the gradient with respect to the observation point's coordinates, with the charges held fixed. For the ring, $-dV/dr$ still has a physical meaning: multiplied by a test charge at the center, it is the total outward force tending to expand the ring.
+
+The full answer, with a figure, is in [`trick_quiz.pdf`](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/trick_quiz.pdf), in both English and Korean.
+
 ## Using the demo
 
 - **Charge distribution:** switch between the point charge, the ring and the spherical shell.
@@ -70,7 +83,9 @@ $V$ rises in the plane of the ring and falls along its axis. A test charge at th
 
 Units throughout the demo: $R = 1$ and $q/4\pi\varepsilon_0 = 1$, and the test charge has charge-to-mass ratio $\pm 1$.
 
-## Building the note
+## Building the documents
+
+**The note** compiles with pdfLaTeX:
 
 ```bash
 pdflatex charged_ring.tex
@@ -81,6 +96,14 @@ Required packages: `amsmath`, `physics`, `tikz` (with `tikz-3dplot`), `pgfplots`
 
 pgfplots cannot evaluate elliptic integrals, so the in-plane ring curves are embedded in the source as precomputed coordinates. They were checked against direct numerical integration.
 
+**The trick quiz** contains Korean text and needs XeLaTeX:
+
+```bash
+xelatex trick_quiz.tex
+```
+
+It uses the Noto Serif CJK KR and Noto Sans CJK KR fonts. If they aren't installed, replace the font names in the preamble with any installed Korean font, such as Nanum Myeongjo.
+
 ## Implementation notes
 
 - The demo is a single HTML file with plain JavaScript and Canvas 2D; there are no dependencies. It loads Google Fonts when online and falls back to system fonts otherwise.
@@ -90,5 +113,5 @@ pgfplots cannot evaluate elliptic integrals, so the in-plane ring curves are emb
 
 ## Credits
 
-- Idea and motivation: Sang Hoon Lee.
-- Note, figures and interactive demo: written by Claude Opus 5.5 (Anthropic), in conversation with Sang Hoon Lee.
+- Idea, motivation and trick quiz: Sang Hoon Lee.
+- Note, quiz answer, figures and interactive demo: written by Claude Opus 5.5 (Anthropic), in conversation with Sang Hoon Lee.
