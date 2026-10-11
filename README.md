@@ -1,5 +1,7 @@
 # Same Potential, Different Fields: The Charged Ring and Spherical Shell
 
+> Part of **[Physics 2: Interactive Demos](https://lshlj82.github.io/physics2-GNU/)** (경상국립대학교 물리학2 보조자료), as a supplement to demo 2, [Gauss's law and electric potential](https://lshlj82.github.io/Gauss-law-and-potential/gauss-en.html) ([한국어](https://lshlj82.github.io/Gauss-law-and-potential/gauss-ko.html)).
+
 A short note and an interactive demo on a classic electrostatics puzzle. Compare two cases, both with total charge $q$:
 
 - a point charge $q$, observed at distance $R$;
@@ -11,7 +13,7 @@ $$V = \frac{q}{4\pi\varepsilon_0 R}$$
 
 The electric fields are completely different. Why doesn't the equal value of $V$ tell you anything about $\mathbf{E}$? And what do the potential and field of the ring actually look like away from the center?
 
-**[Open the interactive demo](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/index.html)** · **[Read the note (PDF)](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/charged_ring.pdf)** · **[Trick quiz and answer (PDF, English & Korean)](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/trick_quiz.pdf)**
+**[Open the interactive demo](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/index.html)** ([한국어](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/index_ko.html)) · **[Read the note (PDF)](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/charged_ring.pdf)** · **[Trick quiz and answer (PDF, English & Korean)](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/trick_quiz.pdf)**
 
 ## Motivation
 
@@ -30,6 +32,7 @@ The note works through the mathematics, and the demo lets you see and test each 
 | File | Description |
 |---|---|
 | `index.html` | Self-contained interactive demo. Open it in any modern browser; no build step or server is needed. |
+| `index_ko.html` | Korean version of the demo (한국어판). The two pages link to each other. |
 | `charged_ring.tex` | LaTeX source of the note, with TikZ/pgfplots figures. |
 | `charged_ring.pdf` | Compiled version of the note ([view online](https://lshlj82.github.io/circular-and-spherical-charge-electric-potential-and-field/charged_ring.pdf)). |
 | `trick_quiz.tex` | LaTeX source of the trick quiz and its answer, in English and Korean. |
